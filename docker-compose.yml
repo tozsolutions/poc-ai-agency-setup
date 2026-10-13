@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ai-agency-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-strongpassword}
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - NODE_ENV=production
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  model-proxy:
+    build:
+      context: ./model-proxy
+      dockerfile: Dockerfile
+    container_name: ai-agency-model-proxy
+    restart: unless-stopped
+    ports:
+      - "4010:4010"
+    env_file:
+      - .env
+    environment:
+      - PORT=4010
+      - LOCAL_LLM_BASE_URL=${LOCAL_LLM_BASE_URL:-http://host.docker.internal:7860}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - HF_API_KEY=${HF_API_KEY:-}
+
+  orchestrator:
+    build:
+      context: ./orchestrator
+      dockerfile: Dockerfile
+    container_name: ai-agency-orchestrator
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      - MODEL_PROXY_URL=http://model-proxy:4010
+      - REMOTION_URL=http://remotion:3000
+      - PORT=4000
+    depends_on:
+      - model-proxy
+      - remotion
+
+  remotion:
+    build:
+      context: ./remotion
+      dockerfile: Dockerfile
+    container_name: ai-agency-remotion
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    volumes:
+      - ./remotion/output:/app/output
+
+volumes:
+  n8n_data:

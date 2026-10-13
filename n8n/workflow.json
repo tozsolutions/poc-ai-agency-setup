@@ -1,0 +1,60 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "path": "webhook",
+        "options": {
+          "responseMode": "responseNode",
+          "responseCode": 200,
+          "responseData": "={\"ok\":true}",
+          "webhookId": "ai-agency-webhook"
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [160, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://orchestrator:4000/create_video_from_prompt",
+        "options": {},
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $json.body.prompt || 'AI workflow demo' }}"
+            },
+            {
+              "name": "style",
+              "value": "youtube-short"
+            }
+          ]
+        }
+      },
+      "name": "Call Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [420, 200]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Call Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "ai-agency-poc"
+  }
+}

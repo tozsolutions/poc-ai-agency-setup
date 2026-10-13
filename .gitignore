@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+
+# Node
+node_modules/
+.env
+.env.local
+npm-debug.log*
+
+# Local runtime folders
+artifacts/
+output/
+*.mp4
+*.wav
+*.png
+*.jpg
+*.webm
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/

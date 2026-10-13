@@ -1,55 +1,96 @@
-# PoC AI Agency Setup
+# AI Agency Setup
 
-This repository contains a minimal end-to-end proof-of-concept for an autonomous AI social/video agency running in a hybrid local + cloud setup.
-
-The system aims to:
-- run local-heavy production jobs on a desktop PC with an RTX 4070
-- keep orchestration, approvals, and integrations on a laptop or VPS
-- schedule production jobs only during approved windows
-- support local model inference with free-tier cloud fallbacks when needed
-
-## Goal
-
-Create a practical pipeline for:
-- content ideation and trend research
+This repository is a working scaffold for a local-first autonomous AI agency focused on:
+- trend research
 - script generation
-- image generation for thumbnails/assets
-- programmatic video rendering
-- TTS / voice-over generation
-- review queue and publishing automation
+- thumbnail and image generation
+- short-form video rendering
+- voice-over / TTS
+- scheduling and social publishing
 
-## Architecture summary
+## Why this project exists
 
-- Local production machine (Windows 10 desktop): runs heavy workloads only during allowed hours.
-- Control plane (Windows 11 laptop or VPS): orchestrator and workflow automation.
-- Reverse tunnel: desktop is not directly exposed to the internet; access goes through a secure tunnel.
-- Fallback model routing: local model first, then free-tier cloud inference if local models are unavailable or insufficient.
+The goal is to keep the expensive GPU work on a desktop PC and the orchestration, approval workflow, and publishing on a laptop or VPS. This keeps cost low and works well with a Windows 10 desktop + Windows 11 laptop + VPS architecture.
 
-## Included quick-start files
+## Core architecture
 
-- `docker-compose.yml` — local services for n8n + orchestrator + proxy + rendering worker
-- `orchestrator/app.py` — minimal FastAPI orchestrator
-- `model-proxy/index.js` — model proxy with local-first and HF fallback logic
-- `remotion/` — minimal programmatic video render template
-- `.env.example` — environment variables template
-- `README.md` — setup guide
+- Desktop PC (Windows 10): heavy local generation only during allowed windows.
+- Laptop or VPS: orchestration, approvals, monitoring, publishing, and fallback routing.
+- Reverse tunnel: desktop is not directly reachable from the internet; access is proxied via a secure SSH tunnel.
+- Local-first model routing: local model and local tools first, cloud fallback second.
+
+## Included pieces
+
+- `docker-compose.yml` — service stack for n8n + model proxy + orchestrator + Remotion worker
+- `model-proxy/` — lightweight local-first proxy with cloud fallback logic
+- `orchestrator/` — FastAPI-based orchestrator for jobs and outputs
+- `remotion/` — minimal Remotion render template
+- `web-ui/` — simple React + Three.js interface skeleton
+- `n8n/workflow.json` — basic n8n pipeline starter
+- `.env.example` — environment template
 
 ## Recommended stack
 
-- Local generation: text-generation-webui, AUTOMATIC1111, Remotion, Coqui TTS
-- Orchestration: Hermes-inspired agent runner + n8n + FastAPI
-- Infrastructure: SSH reverse tunnel (autossh), Docker Compose, GitHub Actions optional
+- Local models: text-generation-webui or llama.cpp based model on the desktop GPU
+- Visual generation: Automatic1111 / Stable Diffusion
+- Video: Remotion + FFmpeg
+- TTS: Coqui TTS or VoiceStudio
+- Orchestration: Hermes-inspired agent runner + n8n
+- Fallback: free-tier model APIs such as Hugging Face or a small cloud provider
 
-## Planned workflow
+## Quick start
 
-1. Research and trending topic discovery
-2. Script generation
-3. Thumbnail generation
-4. Video render
-5. Voiceover rendering
-6. Quality review
-7. Publish to YouTube / Reddit / social channels via n8n
+1. Copy `.env.example` to `.env` and fill values.
+2. Start the core stack:
 
-## Notes
+   docker compose up --build
 
-This repository is intentionally a proof-of-concept scaffold, designed to help a new builder get from zero to a working local-first AI agency workflow without paying large up-front costs.
+3. Test the orchestrator:
+
+   curl -X POST http://localhost:4000/create_video_from_prompt \
+     -H "Content-Type: application/json" \
+     -d '{"prompt":"Create a short YouTube video about AI workflow automation", "style":"youtube-short"}'
+
+4. Open n8n at http://localhost:5678
+5. Import `n8n/workflow.json`
+6. Open the web UI in `web-ui` and run the basic dashboard skeleton
+
+## Production windows
+
+This project assumes the heavy local desktop tasks run only during approved windows, for example:
+- 09:00–12:00
+- 23:00–07:00
+
+This schedule should be enforced by the orchestration layer and job scheduling policy.
+
+## Production notes
+
+This is intentionally a proof-of-concept and starting scaffold. In a real deployment, you will need to:
+- add proper user approvals before publishing
+- restrict or validate model inputs
+- store secrets outside the repository
+- add moderation and compliance checks
+- add a real reverse tunnel / firewall setup for the desktop PC
+
+## Next recommended steps
+
+1. Install local GPU model for text generation
+2. Connect AUTOMATIC1111 for image generation
+3. Replace the minimal Remotion template with your real brand templates
+4. Implement real publishing nodes for YouTube / Reddit / GitHub
+5. Add moderation and analytics agents
+
+## Folder map
+
+- `docker-compose.yml`
+- `.env.example`
+- `README.md`
+- `orchestrator/`
+- `model-proxy/`
+- `remotion/`
+- `web-ui/`
+- `n8n/`
+
+## License
+
+MIT
